@@ -1,4 +1,4 @@
-const int relayPin = 4;
+const int relayPin = 26;
 
 void setup() {
   Serial.begin(115200);
