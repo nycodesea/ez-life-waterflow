@@ -14,7 +14,7 @@ void loop() {
   Serial.println(moisture);
 
   if (moisture > 3000) {   // 乾燥判定（値は要調整）
-    count+=1;
+    count++;
     Serial.println("Count up!");
     Serial.println(count);
   } else {
@@ -26,7 +26,7 @@ void loop() {
   if (count >= 3) {   // 乾燥判定（値は要調整）
       digitalWrite(relayPin, HIGH);   // リレーON
       Serial.println("Turn on!!");
-      delay(5000);
+      delay(3000);
       count=0;
       Serial.println("Count 0");
       
@@ -34,5 +34,5 @@ void loop() {
   
   digitalWrite(relayPin, LOW);
   Serial.println("Set low");
-  delay(60 * 1000);
+  delay(1000);
 }
