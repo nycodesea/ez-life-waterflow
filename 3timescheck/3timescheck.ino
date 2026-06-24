@@ -26,7 +26,7 @@ void loop() {
   if (count >= 3) {   // 乾燥判定（値は要調整）
       digitalWrite(relayPin, HIGH);   // リレーON
       Serial.println("Turn on!!");
-      delay(5000);
+      delay(3000);
       count=0;
       Serial.println("Count 0");
       
