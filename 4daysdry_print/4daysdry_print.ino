@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <time.h>
 #include <WebServer.h>
+#include <HTTPClient.h>
 
 WebServer server(80);
 
@@ -55,6 +56,25 @@ void setup() {
 void loop() {
   struct tm timeinfo;
   currentMoisture = analogRead(sensorPin);
+  bool watered = false;
+
+  //APIにデータを送信
+  HTTPClient http;
+
+  http.begin("http://192.168.1.100:5000/api/data");
+  http.addHeader("Content-Type", "application/json");
+
+  String json =
+    "{\"moisture\":" + String(currentMoisture) +
+    ",\"dryDays\":" + String(dryDays) + 
+    ",\"watered\":" + String(watered ? "true" : "false") + "}";
+
+  int responseCode = http.POST(json);
+
+  Serial.print("Response: ");
+  Serial.println(responseCode);
+
+  http.end();
 
   if (getLocalTime(&timeinfo)) {
 
@@ -96,6 +116,7 @@ void loop() {
         digitalWrite(relayPin, LOW);
 
         dryDays = 0;
+        watered = true;
         Serial.println("dryDays reset.");
       }
     }
