@@ -1,15 +1,14 @@
-const int sensorPin = 35;  // 湿度センサー
-const int relayPin = 26;   // リレー
-int count =0;
+const int relayPin = 26;
 
 void setup() {
   Serial.begin(115200);
   pinMode(relayPin, OUTPUT);
-  digitalWrite(relayPin, LOW);
 }
 
 void loop() {
-  int moisture = analogRead(sensorPin);
+  Serial.println("HIGH");
+  digitalWrite(relayPin, HIGH);
+  delay(2000);
 
   Serial.println(moisture);
 
@@ -32,7 +31,7 @@ void loop() {
       
   }
   
+  Serial.println("LOW");
   digitalWrite(relayPin, LOW);
-  Serial.println("Set low");
-  delay(60 * 1000);
+  delay(2000);
 }
