@@ -3,6 +3,7 @@
 #include <time.h>
 #include <WebServer.h>
 #include <HTTPClient.h>
+#include <ArduinoJson.h>
 
 WebServer server(80);
 
@@ -53,15 +54,17 @@ void setup() {
   Serial.println(WiFi.localIP());
 }
 
+bool watered = false;
+float rain_sum = 0.0;
+
 void loop() {
   struct tm timeinfo;
   currentMoisture = analogRead(sensorPin);
-  bool watered = false;
 
   //APIにデータを送信
   HTTPClient http;
 
-  http.begin("http://192.168.1.100:5000/api/data");
+  http.begin("http://192.168.3.24:8050/api/sensor");
   http.addHeader("Content-Type", "application/json");
 
   String json =
@@ -73,6 +76,23 @@ void loop() {
 
   Serial.print("Response: ");
   Serial.println(responseCode);
+  watered = false;
+  http.end();
+
+  //weatherAPI
+  http.begin("http://192.168.3.24:8050/api/weather");
+
+  responseCode = http.GET();
+
+  if (responseCode == 200) {
+      String payload = http.getString();
+      Serial.println(payload);
+
+      JsonDocument doc;
+      deserializeJson(doc, payload);
+
+      rain_sum = doc["next_3days_rain_sum"];
+  }
 
   http.end();
 
@@ -108,7 +128,7 @@ void loop() {
         Serial.println("Not dry. Reset dryDays.");
       }
 
-      if (dryDays > 3) {
+      if (dryDays > 3 && rain_sum < 10.0) {
         Serial.println("Watering!");
 
         digitalWrite(relayPin, HIGH);
