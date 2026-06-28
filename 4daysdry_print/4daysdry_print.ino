@@ -22,32 +22,36 @@ int dryDays = 0;
 int lastCheckedDay = -1;
 
 //watering api
-void sendWateringData() {
+void sendWateringData(int moisture_before, unsigned long duration, int moisture_after) {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
-  http.begin("http://192.168.3.24:8050/api/watering");
+  http.begin("http://192.168.3.24:8049/api/watering");
   http.addHeader("Content-Type", "application/json");
 
-  // JSON作成
   StaticJsonDocument<256> doc;
 
   doc["plant_id"] = 1;
-  doc["watering_time"] = "2026-06-29 21:00:00";
-  doc["watering_duration"] = 1500;
-  doc["moisture_before"] = 28;
-  doc["moisture_after"] = 52;
+
+  // ESP側で時間作る（簡易）
+  struct tm timeinfo;
+  if (getLocalTime(&timeinfo)) {
+    char buf[32];
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
+    doc["watering_time"] = buf;
+  }
+
+  doc["watering_duration"] = duration;
+  doc["moisture_before"] = moisture_before;
+  doc["moisture_after"] = moisture_after; // 水やり後
 
   String json;
   serializeJson(doc, json);
 
-  int httpResponseCode = http.POST(json);
+  int code = http.POST(json);
 
-  Serial.print("Response code: ");
-  Serial.println(httpResponseCode);
-
-  String response = http.getString();
-  Serial.println(response);
+  Serial.print("Response: ");
+  Serial.println(code);
 
   http.end();
 }
@@ -83,8 +87,10 @@ void setup() {
   delay(2000);
   digitalWrite(relayPin, LOW);
 
-  delay(50000);
+  delay(5000);
   Serial.println(WiFi.localIP());
+  //API test
+  sendWateringData(3000,2000, 2000);
 }
 
 bool watered = false;
@@ -128,7 +134,7 @@ void loop() {
         String payload = http.getString();
         Serial.println(payload);
 
-        JsonDocument doc;
+        StaticJsonDocument<256> doc;
         deserializeJson(doc, payload);
 
         rain_sum = doc["next_3days_rain_sum"];
@@ -176,13 +182,24 @@ void loop() {
       if (shouldWater) {
         Serial.println("Watering!");
 
+        unsigned long start = millis();
+
         digitalWrite(relayPin, HIGH);
         delay(2000);
         digitalWrite(relayPin, LOW);
 
+        delay(10000);
+
+        unsigned long duration = millis() - start;
+
+        int before = moisture;
+        int after = analogRead(sensorPin);
         dryDays = 0;
         watered = true;
+
         Serial.println("dryDays reset.");
+
+        sendWateringData(before, duration, after);
       }
     }
   }
