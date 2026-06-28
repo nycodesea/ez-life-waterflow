@@ -21,6 +21,37 @@ const int relayPin = 26;
 int dryDays = 0;
 int lastCheckedDay = -1;
 
+//watering api
+void sendWateringData() {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  HTTPClient http;
+  http.begin("http://192.168.3.24:8050/api/watering");
+  http.addHeader("Content-Type", "application/json");
+
+  // JSON作成
+  StaticJsonDocument<256> doc;
+
+  doc["plant_id"] = 1;
+  doc["watering_time"] = "2026-06-29 21:00:00";
+  doc["watering_duration"] = 1500;
+  doc["moisture_before"] = 28;
+  doc["moisture_after"] = 52;
+
+  String json;
+  serializeJson(doc, json);
+
+  int httpResponseCode = http.POST(json);
+
+  Serial.print("Response code: ");
+  Serial.println(httpResponseCode);
+
+  String response = http.getString();
+  Serial.println(response);
+
+  http.end();
+}
+
 void handleRoot() {
   String html = "";
 
