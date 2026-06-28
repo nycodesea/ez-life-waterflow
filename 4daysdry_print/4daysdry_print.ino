@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 
 bool useWeather = true; //天気の利用（屋内屋外）
+bool useApi = true;
 
 WebServer server(80);
 
@@ -44,8 +45,6 @@ void setup() {
   server.on("/", handleRoot);
   server.begin();
 
-  Serial.println(WiFi.localIP());
-
   pinMode(relayPin, OUTPUT);
 
   Serial.println("Watering!"); // 起動時水やり
@@ -53,6 +52,7 @@ void setup() {
   delay(2000);
   digitalWrite(relayPin, LOW);
 
+  delay(50000);
   Serial.println(WiFi.localIP());
 }
 
@@ -62,27 +62,33 @@ float rain_sum = 0.0;
 void loop() {
   struct tm timeinfo;
   currentMoisture = analogRead(sensorPin);
-
+  
   //APIにデータを送信
   HTTPClient http;
+  if(useApi){
+    http.begin("http://192.168.3.24:8050/api/sensor");
+    http.addHeader("Content-Type", "application/json");
 
-  http.begin("http://192.168.3.24:8050/api/sensor");
-  http.addHeader("Content-Type", "application/json");
+    String json =
+      "{\"moisture\":" + String(currentMoisture) +
+      ",\"dryDays\":" + String(dryDays) + 
+      ",\"watered\":" + String(watered ? "true" : "false") + "}";
 
-  String json =
-    "{\"moisture\":" + String(currentMoisture) +
-    ",\"dryDays\":" + String(dryDays) + 
-    ",\"watered\":" + String(watered ? "true" : "false") + "}";
+    int responseCode = http.POST(json);
 
-  int responseCode = http.POST(json);
+    if (responseCode > 0) {
+      Serial.println("Sensor API OK");
+    } else {
+      Serial.println("Sensor API failed");
+    }
 
-  Serial.print("Response: ");
-  Serial.println(responseCode);
+    http.end();
+  }
+
   watered = false;
-  http.end();
-
-  //weatherAPI
-  if (useWeather){
+  int responseCode = -1;
+  //weatherAPI取得
+  if (useApi && useWeather){
     http.begin("http://192.168.3.24:8050/api/weather");
 
     responseCode = http.GET();
@@ -95,6 +101,9 @@ void loop() {
         deserializeJson(doc, payload);
 
         rain_sum = doc["next_3days_rain_sum"];
+    } else {
+      rain_sum = 0.0;
+      Serial.println("Weather API failed");
     }
 
     http.end();
