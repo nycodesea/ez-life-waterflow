@@ -5,6 +5,8 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
+bool useWeather = true; //天気の利用（屋内屋外）
+
 WebServer server(80);
 
 int currentMoisture = 0;
@@ -80,25 +82,27 @@ void loop() {
   http.end();
 
   //weatherAPI
-  http.begin("http://192.168.3.24:8050/api/weather");
+  if (useWeather){
+    http.begin("http://192.168.3.24:8050/api/weather");
 
-  responseCode = http.GET();
+    responseCode = http.GET();
 
-  if (responseCode == 200) {
-      String payload = http.getString();
-      Serial.println(payload);
+    if (responseCode == 200) {
+        String payload = http.getString();
+        Serial.println(payload);
 
-      JsonDocument doc;
-      deserializeJson(doc, payload);
+        JsonDocument doc;
+        deserializeJson(doc, payload);
 
-      rain_sum = doc["next_3days_rain_sum"];
+        rain_sum = doc["next_3days_rain_sum"];
+    }
+
+    http.end();
   }
-
-  http.end();
 
   if (getLocalTime(&timeinfo)) {
 
-    // 毎朝8:00に1回だけ実行
+    // AM8:00
     if (timeinfo.tm_hour == 8 &&
         timeinfo.tm_min == 0 &&
         timeinfo.tm_mday != lastCheckedDay) {
@@ -128,7 +132,8 @@ void loop() {
         Serial.println("Not dry. Reset dryDays.");
       }
 
-      if (dryDays > 3 && rain_sum < 10.0) {
+      bool shouldWater = dryDays > 3 && (!useWeather || rain_sum < 10.0);
+      if (shouldWater) {
         Serial.println("Watering!");
 
         digitalWrite(relayPin, HIGH);
