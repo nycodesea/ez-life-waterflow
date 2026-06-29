@@ -1,11 +1,10 @@
-//Wifi情報あり！！　注意！！
 #include <WiFi.h>
 #include <time.h>
 #include <WebServer.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-bool useWeather = true; //天気の利用（屋内屋外）
+bool useWeather = true; //use rain
 bool useApi = true;
 
 WebServer server(80);
@@ -14,6 +13,12 @@ int currentMoisture = 0;
 
 const char* ssid = "Input SSID";
 const char* password = "Input password";
+
+const char* API_HOST = "http://192.168.3.24";
+
+const String SENSOR_URL = String(API_HOST) + ":8050/api/sensor";
+const String WEATHER_URL = String(API_HOST) + ":8050/api/weather";
+const String WATERING_URL = String(API_HOST) + ":8049/api/watering";
 
 const int sensorPin = 35;
 const int relayPin = 26;
@@ -26,14 +31,13 @@ void sendWateringData(int moisture_before, unsigned long duration, int moisture_
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
-  http.begin("http://192.168.3.24:8049/api/watering");
+  http.begin(WATERING_URL);
   http.addHeader("Content-Type", "application/json");
 
   StaticJsonDocument<256> doc;
 
   doc["plant_id"] = 1;
 
-  // ESP側で時間作る（簡易）
   struct tm timeinfo;
   if (getLocalTime(&timeinfo)) {
     char buf[32];
@@ -43,7 +47,7 @@ void sendWateringData(int moisture_before, unsigned long duration, int moisture_
 
   doc["watering_duration"] = duration;
   doc["moisture_before"] = moisture_before;
-  doc["moisture_after"] = moisture_after; // 水やり後
+  doc["moisture_after"] = moisture_after;
 
   String json;
   serializeJson(doc, json);
@@ -82,7 +86,7 @@ void setup() {
 
   pinMode(relayPin, OUTPUT);
 
-  Serial.println("Watering!"); // 起動時水やり
+  Serial.println("Watering!"); // Watering
   digitalWrite(relayPin, HIGH);
   delay(2000);
   digitalWrite(relayPin, LOW);
@@ -100,10 +104,10 @@ void loop() {
   struct tm timeinfo;
   currentMoisture = analogRead(sensorPin);
   
-  //APIにデータを送信
+  //Send Moisture data
   HTTPClient http;
   if(useApi){
-    http.begin("http://192.168.3.24:8050/api/sensor");
+    http.begin(SENSOR_URL);
     http.addHeader("Content-Type", "application/json");
 
     String json =
@@ -124,9 +128,9 @@ void loop() {
 
   watered = false;
   int responseCode = -1;
-  //weatherAPI取得
+  //get weatherAPI
   if (useApi && useWeather){
-    http.begin("http://192.168.3.24:8050/api/weather");
+    http.begin(WEATHER_URL);
 
     responseCode = http.GET();
 
@@ -165,7 +169,7 @@ void loop() {
       int moisture = total / 10;
       currentMoisture = moisture;
 
-      Serial.println("湿度チェック！");
+      Serial.println("Checking Moisture");
       Serial.print("Moisture: ");
       Serial.println(moisture);
 
