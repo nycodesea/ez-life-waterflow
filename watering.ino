@@ -14,7 +14,7 @@ int currentMoisture = 0;
 const char* ssid = "Input SSID";
 const char* password = "Input password";
 
-const char* API_HOST = "http://192.168.3.24";
+const char* API_HOST = "http://192.168.x.xx"; //Input
 
 const String SENSOR_URL = String(API_HOST) + ":8050/api/sensor";
 const String WEATHER_URL = String(API_HOST) + ":8050/api/weather";
@@ -86,15 +86,14 @@ void setup() {
 
   pinMode(relayPin, OUTPUT);
 
-  Serial.println("Watering!"); // Watering
+// Watering
+/*   Serial.println("Watering!"); 
   digitalWrite(relayPin, HIGH);
-  delay(2000);
+  delay(2000); */
   digitalWrite(relayPin, LOW);
 
   delay(5000);
   Serial.println(WiFi.localIP());
-  //API test
-  sendWateringData(3000,2000, 2000);
 }
 
 bool watered = false;
