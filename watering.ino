@@ -14,7 +14,7 @@ int currentMoisture = 0;
 const char* ssid = "Input SSID";
 const char* password = "Input password";
 
-const char* API_HOST = "http://192.168.x.xx"; //Input
+const char* API_HOST = "http://192.168.x.xx"; //Replace with your server IP
 
 const String SENSOR_URL = String(API_HOST) + ":8050/api/sensor";
 const String WEATHER_URL = String(API_HOST) + ":8050/api/weather";
@@ -26,7 +26,7 @@ const int relayPin = 26;
 int dryDays = 0;
 int lastCheckedDay = -1;
 
-//watering api
+// Send watering log to API
 void sendWateringData(int moisture_before, unsigned long duration, int moisture_after) {
   if (WiFi.status() != WL_CONNECTED) return;
 
