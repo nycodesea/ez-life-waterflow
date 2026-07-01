@@ -10,6 +10,7 @@ bool useApi = true;
 WebServer server(80);
 
 int currentMoisture = 0;
+const int PLANT_ID = 1; // Replace with your actual plant ID
 
 const char* ssid = "Input SSID";
 const char* password = "Input password";
@@ -36,7 +37,7 @@ void sendWateringData(int moisture_before, unsigned long duration, int moisture_
 
   StaticJsonDocument<256> doc;
 
-  doc["plant_id"] = 1;
+  doc["plant_id"] = PLANT_ID;
 
   struct tm timeinfo;
   if (getLocalTime(&timeinfo)) {
