@@ -11,6 +11,8 @@ WebServer server(80);
 
 int currentMoisture = 0;
 const int PLANT_ID = 1; // Replace with your actual plant ID
+const int DRY_THRESHOLD = 3000; // Adjust this threshold based on your sensor calibration
+const int DRY_DAYS_THRESHOLD = 3; // Number of consecutive dry days after today to trigger watering
 
 const char* ssid = "Input SSID";
 const char* password = "Input password";
@@ -173,7 +175,7 @@ void loop() {
       Serial.print("Moisture: ");
       Serial.println(moisture);
 
-      if (moisture > 3000) {
+      if (moisture > DRY_THRESHOLD) {
         dryDays++;
         Serial.print("Dry days: ");
         Serial.println(dryDays);
@@ -182,7 +184,7 @@ void loop() {
         Serial.println("Not dry. Reset dryDays.");
       }
 
-      bool shouldWater = dryDays > 3 && (!useWeather || rain_sum < 10.0);
+      bool shouldWater = dryDays > DRY_DAYS_THRESHOLD && (!useWeather || rain_sum < 10.0);
       if (shouldWater) {
         Serial.println("Watering!");
 
