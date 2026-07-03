@@ -29,7 +29,7 @@ const int relayPin = 26;
 int dryDays = 0;
 int lastCheckedDay = -1;
 
-// Send watering log to API
+// After watering Send watering log to API
 void sendWateringData(int moisture_before, unsigned long duration, int moisture_after) {
   if (WiFi.status() != WL_CONNECTED) return;
 
@@ -90,7 +90,7 @@ void setup() {
   pinMode(relayPin, OUTPUT);
 
 // Watering
-/*   Serial.println("Watering!"); 
+/*   Serial.println("Watering!");
   digitalWrite(relayPin, HIGH);
   delay(2000); */
   digitalWrite(relayPin, LOW);
@@ -105,7 +105,7 @@ float rain_sum = 0.0;
 void loop() {
   struct tm timeinfo;
   currentMoisture = analogRead(sensorPin);
-  
+
   //Send Moisture data
   HTTPClient http;
   if(useApi){
@@ -114,7 +114,7 @@ void loop() {
 
     String json =
       "{\"moisture\":" + String(currentMoisture) +
-      ",\"dryDays\":" + String(dryDays) + 
+      ",\"dryDays\":" + String(dryDays) +
       ",\"watered\":" + String(watered ? "true" : "false") + "}";
 
     int responseCode = http.POST(json);
@@ -130,7 +130,7 @@ void loop() {
 
   watered = false;
   int responseCode = -1;
-  //get weatherAPI
+  //get weatherAPI from Plantly
   if (useApi && useWeather){
     http.begin(WEATHER_URL);
 
