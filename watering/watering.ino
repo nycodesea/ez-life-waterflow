@@ -4,7 +4,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-bool useWeather = true; //use rain forecast from Plantly API to avoid watering if rain is expected
+bool useWeather = true; //use rain
 bool useApi = true;
 
 WebServer server(80);
@@ -29,7 +29,7 @@ const int relayPin = 26;
 int dryDays = 0;
 int lastCheckedDay = -1;
 
-// After watering Send watering log to PlantsDB API always on
+// After watering Send watering log to API
 void sendWateringData(int moisture_before, unsigned long duration, int moisture_after) {
   if (WiFi.status() != WL_CONNECTED) return;
 
